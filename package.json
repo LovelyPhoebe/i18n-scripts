@@ -1,0 +1,12 @@
+{
+  "name": "lin",
+  "version": "1.0.0",
+  "description": "find the content need to translate",
+  "main": "index.js",
+  "repository": "git@github.com:LovelyPhoebe/i18n-scripts.git",
+  "author": "Hanabe",
+  "license": "MIT",
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
