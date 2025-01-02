@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const XLSX = require("xlsx");
 
-const excludeDir = ["i18n", "DataPlatform"];
+const excludeDir = ["i18n", "DataPlatform", "locales"];
 
 function dfs(dir) {
   // 需要排除excludeDir目录的文件
@@ -22,28 +22,45 @@ function dfs(dir) {
 
 function readFile(fileName) {
   const commentRegex = /\/\/.*|\/\*[\s\S]*?\*\//g;
-  let text = fs.readFileSync(fileName, { encoding: "utf-8" });
-  text = text.replace(commentRegex, ""); // 去除注释
+  const text = fs.readFileSync(fileName, { encoding: "utf-8" });
+  const cleanText = text.replace(commentRegex, ""); // 去除注释
+  const result = [];
+
+  // 匹配 lang?.xxx 或 lang.xxx
+  const regex1 = /lang\??.?\.(\w+|[\u4e00-\u9fa5]+)/g;
+
+  //  字符串字面量 或 HTML 标签 等内容中匹配 中文字符
+
+  const regex2 =
+    /'([\u4e00-\u9fa5]+)'|">([\u4e00-\u9fa5]+)<|"([\u4e00-\u9fa5]+)"|`([\u4e00-\u9fa5]+)`/g;
+
   const pattern =
     /'[\u4e00-\u9fa5]+([^']*)'|>[\u4e00-\u9fa5]+<|"[\u4e00-\u9fa5]+([^"]*)[\u4e00-\u9fa5]+"|`[\u4e00-\u9fa5]+.*`/g;
-  let index = text.indexOf("i(");
-  const result = [];
-  while (index >= 0) {
-    if (text.charAt(index + 2) == '"')
-      result.push(text.substring(index + 3, text.indexOf('"', index + 3)));
-    else if (text.charAt(index + 2) == "'")
-      result.push(text.substring(index + 3, text.indexOf("'", index + 3)));
-    index = text.indexOf("i(", index + 1);
+  let match;
+
+  // 匹配 lang?.xxx 和 lang.xxx
+  while ((match = regex1.exec(cleanText)) !== null) {
+    result.push(match[1]);
   }
-  const ChineseArray = text.match(pattern);
-  if (ChineseArray) {
-    ChineseArray.forEach((text) => {
+
+  //   while ((match = regex2.exec(cleanText)) !== null) {
+  //     result.push(match[1]);
+  //   }
+  const texts = cleanText.match(pattern);
+  if (texts) {
+
+    texts.forEach((text) => {
         result.push(text.replace(/'|<|>|"|`/g, ""));
       });
   }
-  const uniqueArray = [...new Set(result)]
-  return uniqueArray;
+
+  // 删除重复的条目
+  const uniqueResult = [...new Set([...result])];
+
+  // 按照需求返回文本
+  return { translations: uniqueResult };
 }
+
 function ensureDirectoryExistence(filePath) {
   const dirname = path.dirname(filePath);
   if (!fs.existsSync(dirname)) {
@@ -132,9 +149,19 @@ function outputExcel(words) {
 // }
 
 function main(dir) {
-    const files = dfs(dir);
-    const words = [...new Set(files.map(s => readFile(s)).flat())];
-    outputExcel(words)
+  const files = dfs(dir);
+  const allTranslations = [];
+
+  // 读取文件并提取翻译文本和变量名
+  files.forEach((file) => {
+    const { translations } = readFile(file);
+
+    // 合并翻译文本和变量名
+    allTranslations.push(...translations);
+  });
+  // 去重翻译文本和变量名
+  const uniqueTranslations = [...new Set(allTranslations)];
+  outputExcel([...uniqueTranslations]);
 }
 
 main(process.argv[2], process.argv[3]);
