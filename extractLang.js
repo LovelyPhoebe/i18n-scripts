@@ -27,7 +27,9 @@ function readFile(fileName) {
   const result = [];
 
   // 匹配 lang?.xxx 或 lang.xxx
-  const regex1 = /lang\??.?\.(\w+|[\u4e00-\u9fa5]+)/g;
+  // const regex1 = /lang\??.?\.(\w+|[\u4e00-\u9fa5]+)/g;
+  // 新的正则表达式，匹配 lang["xxx"], lang['xxx'] 和 lang[变量] 的模式
+  const regex1 = /lang\[(?:["'](.+?)["']|([a-zA-Z_$][a-zA-Z0-9_$]*))\]/g;
 
   //  字符串字面量 或 HTML 标签 等内容中匹配 中文字符
 
@@ -46,13 +48,13 @@ function readFile(fileName) {
   //   while ((match = regex2.exec(cleanText)) !== null) {
   //     result.push(match[1]);
   //   }
-  const texts = cleanText.match(pattern);
-  if (texts) {
+  // const texts = cleanText.match(pattern);
+  // if (texts) {
 
-    texts.forEach((text) => {
-        result.push(text.replace(/'|<|>|"|`/g, ""));
-      });
-  }
+  //   texts.forEach((text) => {
+  //       result.push(text.replace(/'|<|>|"|`/g, ""));
+  //     });
+  // }
 
   // 删除重复的条目
   const uniqueResult = [...new Set([...result])];

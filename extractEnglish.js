@@ -15,7 +15,8 @@ function extractKeysToExcel(inputFile, outputFile) {
         const jsonData = JSON.parse(fs.readFileSync(inputFile, 'utf-8'));
 
         // Regular expression to match English + numeric + special character '-'
-        const keyPattern = /^[a-zA-Z0-9-]+$/;
+        // const keyPattern = /^[a-zA-Z0-9_]+$/;
+        const keyPattern = /^(?=.*_)[a-zA-Z0-9_]+$/; // 这个正则表达式使用了正向预查 (?=.*_)，确保字符串中至少包含一个下划线 _。这样，只有包含下划线的字符串才会被匹配。
 
         // Filter keys matching the pattern
         const results = [];
